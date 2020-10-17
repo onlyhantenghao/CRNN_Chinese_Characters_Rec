@@ -30,6 +30,7 @@ class _360CC(data.Dataset):
             for c in contents:
                 imgname = c.split(' ')[0]
                 indices = c.split(' ')[1:]
+                print(indices)
                 string = ''.join([char_dict[int(idx)] for idx in indices])
                 self.labels.append({imgname: string})
 

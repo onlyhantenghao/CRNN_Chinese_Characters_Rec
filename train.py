@@ -12,24 +12,27 @@ from lib.core import function
 import lib.config.alphabets as alphabets
 from lib.utils.utils import model_info
 
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
+
 
 def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
 
-    parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
+    parser.add_argument(
+        '--cfg', help='experiment configuration filename', required=True, type=str)
 
     args = parser.parse_args()
 
     with open(args.cfg, 'r') as f:
-        # config = yaml.load(f, Loader=yaml.FullLoader)
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        # config = yaml.load(f)
         config = edict(config)
 
     config.DATASET.ALPHABETS = alphabets.alphabet
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
 
     return config
+
 
 def main():
 
@@ -132,10 +135,12 @@ def main():
     converter = utils.strLabelConverter(config.DATASET.ALPHABETS)
     for epoch in range(last_epoch, config.TRAIN.END_EPOCH):
 
-        function.train(config, train_loader, train_dataset, converter, model, criterion, optimizer, device, epoch, writer_dict, output_dict)
+        function.train(config, train_loader, train_dataset, converter, model,
+                       criterion, optimizer, device, epoch, writer_dict, output_dict)
         lr_scheduler.step()
 
-        acc = function.validate(config, val_loader, val_dataset, converter, model, criterion, device, epoch, writer_dict, output_dict)
+        acc = function.validate(config, val_loader, val_dataset, converter,
+                                model, criterion, device, epoch, writer_dict, output_dict)
 
         is_best = acc > best_acc
         best_acc = max(acc, best_acc)
@@ -143,17 +148,20 @@ def main():
         print("is best:", is_best)
         print("best acc is:", best_acc)
         # save checkpoint
-        torch.save(
-            {
-                "state_dict": model.state_dict(),
-                "epoch": epoch + 1,
-                # "optimizer": optimizer.state_dict(),
-                # "lr_scheduler": lr_scheduler.state_dict(),
-                "best_acc": best_acc,
-            },  os.path.join(output_dict['chs_dir'], "checkpoint_{}_acc_{:.4f}.pth".format(epoch, acc))
-        )
+        if is_best:
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "epoch": epoch + 1,
+                    # "optimizer": optimizer.state_dict(),
+                    # "lr_scheduler": lr_scheduler.state_dict(),
+                    "best_acc": best_acc,
+                },  os.path.join(output_dict['chs_dir'], "checkpoint_{}_acc_{:.4f}.pth".format(epoch, acc))
+            )
+            print('best model saved!')
 
     writer_dict['writer'].close()
+
 
 if __name__ == '__main__':
 
