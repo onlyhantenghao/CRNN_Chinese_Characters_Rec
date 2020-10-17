@@ -1,94 +1,78 @@
-# Characters Recognition
+### CRNN
 
-A Chinese characters recognition repository based on convolutional recurrent networks. 
+环境配置
 
-<p align='center'>
-<img src='images/wechatgroup.png' title='example' style='max-width:600px'></img>
-</p>
-
-## Performance
-
-#### Recognize characters in pictures
-
-<p align='center'>
-<img src='images/demo.png' title='example' style='max-width:600px'></img>
-</p>
-<p align='center'>
-<img src='images/demo_2.jpg' title='example2' style='max-width:600px'></img>
-</p>
-
-## Dev Environments
-1. WIN 10 or Ubuntu 16.04
-2. **PyTorch 1.2.0 (may fix ctc loss)** with cuda 10.0 🔥
-3. yaml
-4. easydict
-5. tensorboardX
-
-### Data
-#### Synthetic Chinese String Dataset
-1. Download the [dataset](https://pan.baidu.com/s/1ufYbnZAZ1q0AlK7yZ08cvQ)
-2. Edit **lib/config/360CC_config.yaml** DATA:ROOT to you image path
-
-```angular2html
-    DATASET:
-      ROOT: 'to/your/images/path'
+```bash
+#依赖库
+pip install pyyaml，easydict，opencv-python，torch，torchvision
 ```
 
-3. Download the [labels](https://pan.baidu.com/s/1oOKFDt7t0Wg6ew2uZUN9xg) (password: eaqb)
-4. Put *char_std_5990.txt* in **lib/dataset/txt/**
-5. And put *train.txt* and *test.txt* in **lib/dataset/txt/**
+###  数据结构
 
-    eg. test.txt
-```
-    20456343_4045240981.jpg 89 201 241 178 19 94 19 22 26 656
-    20457281_3395886438.jpg 120 1061 2 376 78 249 272 272 120 1061
-    ...
-```
-#### Or your own data
-1. Edit **lib/config/OWN_config.yaml** DATA:ROOT to you image path
-```angular2html
-    DATASET:
-      ROOT: 'to/your/images/path'
-```
-2. And put your *train_own.txt* and *test_own.txt* in **lib/dataset/txt/**
+#### Image
 
-    eg. test_own.txt
-```
-    20456343_4045240981.jpg 你好啊！祖国！
-    20457281_3395886438.jpg 晚安啊！世界！
-    ...
-```
-**note**: fixed-length training is supported. yet you can modify dataloader to support random length training.   
-
-## Train
-```angular2html
-   [run] python train.py --cfg lib/config/360CC_config.yaml
-or [run] python train.py --cfg lib/config/OWN_config.yaml
-```
-```
-#### loss curve
-
-```angular2html
-   [run] cd output/360CC/crnn/xxxx-xx-xx-xx-xx/
-   [run] tensorboard --logdir log
+```bash
+#/data/img
+YT4781508601922_c.jpg
+YT4780969904156_a.jpg
 ```
 
-#### loss overview(first epoch)
-<center/>
-<img src='images/train_loss.png' title='loss1' style='max-width:800px'></img>
-</center>
-<p>
-<img src='images/tb_loss.png' title='loss1' style='max-width:600px'></img>
-</p>
+#### label
 
-## Demo
-```angular2html
-   [run] python demo.py --image_path images/test.png --checkpoint output/checkpoints/mixed_second_finetune_acc_97P7.pth
+```bash
+#/lib/dataset/txt/train.txt
+#/lib/dataset/txt/test.txt
+YT4781508601922_c.jpg 13718333065
+YT4780969904156_a.jpg 18387504894
+YT4783157963048_e.jpg 18712892065
+YT4782906609375_d.jpg 15227376615
+YT4783337132719_c.jpg 18643431985
+YT4782654683779_a.jpg 13707288872
+YT4778918252899_d.jpg 13913109992
+YT4784300572415_e.jpg 16650113285
+YT4780338010986_b.jpg 18220462612
 ```
-## References
-- https://github.com/meijieru/crnn.pytorch
-- https://github.com/HRNet
 
+#### build_label_txt
 
+```
+#generate_txt.py
+data/label_test/    -->  /lib/dataset/txt/train.txt
+data/label_train/   -->  /lib/dataset/txt/test.txt
+```
 
+### 修改模型参数
+
+```bash
+vim lib/config/OWN_config.yaml
+datasets：
+    ROOT: "data/img"
+    JSON_FILE: {'train': 'lib/dataset/txt/train.txt', 'val': 'lib/dataset/txt/test.txt'}
+    ALPHABETS: '0123456789'
+MODEL:
+  IMAGE_SIZE:
+    OW: 160. # 除非输入数据全部是统一尺度的，否则就固定设置为160
+    H: 32 #输入高度固定为32
+    W: 160   # 模型的输入尺度160
+其他参数为默认值。
+```
+
+### Train
+
+```
+python train.py --cfg lib/config/OWN_config.yaml
+```
+
+#### Tensorboard
+
+```bash
+ cd output/OWN/crnn/xxxx-xx-xx-xx-xx/
+ tensorboard --logdir log/
+```
+
+### Test
+
+```
+python demo.py --image_path images/test.png --checkpoint output/checkpoints/mixed_second_finetune_acc_97P7.pth
+```
 

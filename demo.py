@@ -9,13 +9,16 @@ import lib.config.alphabets as alphabets
 import yaml
 from easydict import EasyDict as edict
 import argparse
- 
+
+
 def parse_arg():
     parser = argparse.ArgumentParser(description="demo")
 
-    parser.add_argument('--cfg', help='experiment configuration filename', type=str, default='lib/config/360CC_config.yaml')
-    parser.add_argument('--image_path', type=str, default='images/test.png', help='the path to your image')
-    parser.add_argument('--checkpoint', type=str, default='output/checkpoints/mixed_second_finetune_acc_97P7.pth',
+    parser.add_argument('--cfg', help='experiment configuration filename',
+                        type=str, default='lib/config/OWN_config.yaml')
+    parser.add_argument('--image_path', type=str,
+                        default='images/1.jpg', help='the path to your image')
+    parser.add_argument('--checkpoint', type=str, default='output/checkpoints/checkpoint_44_acc_0.9513.pth',
                         help='the path to your checkpoints')
 
     args = parser.parse_args()
@@ -29,18 +32,28 @@ def parse_arg():
 
     return config, args
 
+
 def recognition(config, img, model, converter, device):
 
     # github issues: https://github.com/Sierkinhane/CRNN_Chinese_Characters_Rec/issues/211
     h, w = img.shape
+    
     # fisrt step: resize the height and width of image to (32, x)
-    img = cv2.resize(img, (0, 0), fx=config.MODEL.IMAGE_SIZE.H / h, fy=config.MODEL.IMAGE_SIZE.H / h, interpolation=cv2.INTER_CUBIC)
-
+    img = cv2.resize(img, (0, 0), fx=config.MODEL.IMAGE_SIZE.H / h,
+                     fy=config.MODEL.IMAGE_SIZE.H / h, interpolation=cv2.INTER_CUBIC)
+    
     # second step: keep the ratio of image's text same with training
     h, w = img.shape
-    w_cur = int(img.shape[1] / (config.MODEL.IMAGE_SIZE.OW / config.MODEL.IMAGE_SIZE.W))
-    img = cv2.resize(img, (0, 0), fx=w_cur / w, fy=1.0, interpolation=cv2.INTER_CUBIC)
+    w_cur = int(
+        img.shape[1] / (config.MODEL.IMAGE_SIZE.OW / config.MODEL.IMAGE_SIZE.W))
+
+    img = cv2.resize(img, (0, 0), fx=w_cur / w, fy=1.0,
+                     interpolation=cv2.INTER_CUBIC)
+    
     img = np.reshape(img, (config.MODEL.IMAGE_SIZE.H, w_cur, 1))
+    print(img.shape)
+    # cv2.imshow('4',img)
+    # cv2.waitKey(0)
 
     # normalize
     img = img.astype(np.float32)
@@ -61,10 +74,12 @@ def recognition(config, img, model, converter, device):
 
     print('results: {0}'.format(sim_pred))
 
+
 if __name__ == '__main__':
 
     config, args = parse_arg()
-    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device(
+        'cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
     model = crnn.get_crnn(config).to(device)
     print('loading pretrained model from {0}'.format(args.checkpoint))
@@ -84,4 +99,3 @@ if __name__ == '__main__':
 
     finished = time.time()
     print('elapsed time: {0}'.format(finished - started))
-

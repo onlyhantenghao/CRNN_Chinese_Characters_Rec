@@ -37,8 +37,11 @@ class _OWN(data.Dataset):
         img_h, img_w = img.shape
 
         img = cv2.resize(img, (0,0), fx=self.inp_w / img_w, fy=self.inp_h / img_h, interpolation=cv2.INTER_CUBIC)
+        print(img.shape)
+        cv2.imshow('train_input',img)
+        cv2.waitKey(0)
         img = np.reshape(img, (self.inp_h, self.inp_w, 1))
-
+        
         img = img.astype(np.float32)
         img = (img/255. - self.mean) / self.std
         img = img.transpose([2, 0, 1])
